@@ -2,8 +2,7 @@
 <html>
 <head>
     <title>考证理论在线测试（总分80）</title>
-           
-<style>
+    <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 800px;
@@ -43,10 +42,9 @@
             border: 1px solid #ddd;
             border-radius: 3px;
         }
-        /* 调整横向选项间距 */
         .options-row {
             display: flex;
-            gap: 25px;        /* 从15px改为25px */
+            gap: 25px;
             margin-top: 6px;
         }
         .fill-group {
@@ -85,12 +83,11 @@
             position: sticky;
             top: 8px;
             float: right;
-            font-size: 36px !important; 
-
+            font-size: 36px !important;
         }
         button {
-            display: block;         /* 改为块级元素 */
-            margin: 15px auto;     /* 上下边距15px，左右自动居中 */
+            display: block;
+            margin: 15px auto;
             background: #3498db;
             color: white;
             border: none;
@@ -134,7 +131,6 @@
             cursor: pointer;
         }
     </style>
-
 </head>
 <body>
     <div id="examPage">
@@ -174,7 +170,7 @@
                 container.appendChild(createQuestionElement(q, index + 1));
             });
 
-            // 生成图片题（7道）
+            // 生成图片题
             const imgAnswers = 'ACBDBAADBCADBACCADCBBBCCADAAABBACDBDABCACCBBAABADDABACABCAAABBCAAA';
             getRandomIndices(66, 7).forEach((idx, i) => {
                 container.appendChild(createImageQuestion(
@@ -189,7 +185,7 @@
             container.appendChild(createFillQuestion(fillKey, container.children.length + 1));
         }
 
-        // 创建选择题元素（保持字体一致）
+        // 创建选择题元素
         function createQuestionElement(question, number) {
             const div = document.createElement('div');
             div.className = 'question multiple-choice';
@@ -206,7 +202,7 @@
             return div;
         }
 
-        // 创建图片选择题（横向排列）
+        // 创建图片选择题
         function createImageQuestion(imgIndex, correctAnswer, number) {
             const div = document.createElement('div');
             div.className = 'question multiple-choice';
@@ -309,21 +305,28 @@
                 }
             });
 
-            // 处理填空题
-            document.querySelectorAll('.fill-group').forEach((group, index) => {
+            // 处理填空题（修改点）
+            document.querySelectorAll('.fill-group').forEach((group) => {
                 const input = group.querySelector('input');
-                const answers = JSON.parse(group.closest('div[data-answers]').dataset.answers);
-                const correctAnswer = answers[index % answers.length];
-
-                if (input.value.trim() === correctAnswer) {
-                    totalScore += 2;
-                    input.classList.add('correct');
-                } else {
-                    input.classList.add('wrong');
-                    const hint = document.createElement('div');
-                    hint.className = 'answer-hint';
-                    hint.textContent = `(${correctAnswer})`;
-                    group.querySelector('.hint-container').appendChild(hint);
+                const groupContainer = group.closest('div[data-answers]');
+                if (!groupContainer) return;
+                const answers = JSON.parse(groupContainer.dataset.answers);
+                const groupsInContainer = Array.from(groupContainer.querySelectorAll('.fill-group'));
+                const groupIndex = groupsInContainer.indexOf(group);
+                
+                if (groupIndex !== -1 && groupIndex < answers.length) {
+                    const correctAnswer = answers[groupIndex];
+                    
+                    if (input.value.trim() === correctAnswer) {
+                        totalScore += 2;
+                        input.classList.add('correct');
+                    } else {
+                        input.classList.add('wrong');
+                        const hint = document.createElement('div');
+                        hint.className = 'answer-hint';
+                        hint.textContent = correctAnswer; // 仅显示答案
+                        group.querySelector('.hint-container').appendChild(hint);
+                    }
                 }
             });
 
