@@ -59,7 +59,7 @@ const questionBank = {
         { answers: ["局部"] },
         { answers: ["100", "72"] },
         { answers: ["0.050", "62.025", "61.975"] },
-        { answers: ["15", "2"] },
+        { answers: ["2", "15"] },
         { answers: ["6.3"] },
         { answers: ["垂直度", "Φ0.03", "A"] }
     ],
