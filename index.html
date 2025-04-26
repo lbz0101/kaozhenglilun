@@ -3,25 +3,60 @@
 <head>
     <title>考证理论在线测试（总分80）</title>
     <style>
-        #startBtn {
+        #passwordModal {
             position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1000;
+        }
+        #passwordBox {
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 999;
-            background: #2ecc71;
-            color: white;
-            border: none;
-            padding: 30px 60px;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 36px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-            transition: all 0.3s;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
         }
-        #startBtn:hover {
-            background: #27ae60;
-            transform: translate(-50%, -50%) scale(1.05);
+        #passwordInput {
+            font-size: 20px;
+            padding: 10px;
+            margin: 15px 0;
+            width: 200px;
+            border: 2px solid #3498db;
+            border-radius: 5px;
+        }
+        .answered {
+            background: #e0f7fa !important;
+        }
+        .wrong-answer {
+            background: #ffebee !important;
+        }
+        #scoreContainer {
+            position: sticky;
+            top: 8px;
+            float: right;
+            text-align: right;
+        }
+        #scoreDisplay {
+            background: #3498db;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-size: 36px !important;
+        }
+        #timeDisplay {
+            font-size: 20px !important;
+            color: #2c3e50;
+            background: #ecf0f1;
+            padding: 4px 8px;
+            border-radius: 3px;
+            margin-top: 5px;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -40,13 +75,13 @@
             font-size: 1.8em;
             text-align: center;
         }
-        /* 以下原有样式保持不变... */
         .question {
             background: white;
             padding: 10px;
             margin: 8px 0;
             border-radius: 4px;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            transition: background 0.3s;
         }
         .multiple-choice p {
             font-size: 23px !important;
@@ -96,27 +131,6 @@
             font-size: 0.7em;
             white-space: nowrap;
         }
-        #scoreDisplay {
-            background: #3498db;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 3px;
-            position: sticky;
-            top: 8px;
-            float: right;
-            font-size: 36px !important;
-        }
-        #timeDisplay {
-            position: sticky;
-            top: 70px;
-            float: right;
-            font-size: 20px !important;
-            color: #2c3e50;
-            background: #ecf0f1;
-            padding: 4px 8px;
-            border-radius: 3px;
-            margin-top: 5px;
-        }
         button {
             display: block;
             margin: 15px auto;
@@ -165,11 +179,25 @@
     </style>
 </head>
 <body>
-    <button id="startBtn" onclick="startExam()">开始答题</button>
+    <div id="passwordModal">
+        <div id="passwordBox">
+            <h2>请输入考试密码</h2>
+            <input type="password" id="passwordInput" placeholder="请输入密码">
+            <button onclick="checkPassword()" style="font-size: 20px; padding: 8px 20px; margin-top: 10px;">确定</button>
+        </div>
+    </div>
+
+    <!-- 新增的两行标题 -->
+    <div style="text-align: center; margin-bottom: 20px;">
+        <div style="color: #FFA500; font-size: 28px; margin-bottom: 10px;">由 高州一职 Mr黎制作</div>
+        <div style="color: #3498db; font-size: 32px; font-weight: bold;">真题考试系统</div>
+    </div>
+    <button id="startBtn" onclick="showPasswordModal()">开始答题</button>
     <div id="examPage" style="display: none;">
-        <h1>理论真题测试（删减作图题20分） 
-            <span id="scoreDisplay"></span>
-            <div id="timeDisplay"></div>
+            <div id="scoreContainer">
+                <div id="scoreDisplay"></div>
+                <div id="timeDisplay"></div>
+            </div>
         </h1>
         <div id="questions"></div>
         <button onclick="handleSubmit()" id="submitBtn">提交试卷</button>
@@ -178,106 +206,7 @@
     <script src="questions.js"></script>
     <script src="questions1.js"></script>
     <script>
-        // 新增时间记录变量
         let startTime;
-        
-        function startExam() {
-            const password = prompt("请输入考试密码：");
-            if (password === "2426") {
-                document.getElementById("examPage").style.display = "block";
-                document.getElementById("startBtn").style.display = "none";
-                startTime = new Date(); // 记录开始时间
-                generateExam();
-            } else {
-                alert("密码错误，请重新输入！");
-            }
-        }
-
-        // 计算用时
-        function calculateDuration() {
-            const endTime = new Date();
-            const duration = Math.floor((endTime - startTime) / 1000);
-            const minutes = Math.floor(duration / 60).toString().padStart(2, '0');
-            const seconds = (duration % 60).toString().padStart(2, '0');
-            return `${minutes}分${seconds}秒`;
-        }
-
-        // 修改提交处理函数
-        function handleSubmit() {
-            if (!checkAllAnswered()) {
-                alert("你还有题目未作答，请继续答题！");
-                return;
-            }
-
-            // 显示用时
-            document.getElementById('timeDisplay').textContent = `用时：${calculateDuration()}`;
-            
-            const btn = document.getElementById('submitBtn');
-            btn.onclick = () => location.reload();
-            btn.textContent = '重新测试';
-
-            const allInputs = document.querySelectorAll('input');
-            allInputs.forEach(input => input.disabled = true);
-
-            let totalScore = 0;
-
-            // 以下原有评分逻辑保持不变...
-            document.querySelectorAll('.multiple-choice').forEach(question => {
-                const correctAnswer = question.dataset.correct;
-                if (correctAnswer) {
-                    const correctOption = question.querySelector(`input[value="${correctAnswer}"]`);
-                    const selected = question.querySelector('input:checked');
-
-                    if (selected?.value === correctAnswer) {
-                        totalScore += 2;
-                        const mark = document.createElement('span');
-                        mark.className = 'correct-mark';
-                        mark.textContent = '✓';
-                        selected.parentElement.appendChild(mark);
-                    } else {
-                        if (selected) {
-                            const mark = document.createElement('span');
-                            mark.className = 'wrong-mark';
-                            mark.textContent = '✗';
-                            selected.parentElement.appendChild(mark);
-                        }
-                        const correctMark = document.createElement('span');
-                        correctMark.className = 'correct-mark';
-                        correctMark.textContent = `(${correctOption.parentElement.textContent.trim()})`;
-                        question.appendChild(correctMark);
-                    }
-                }
-            });
-
-            document.querySelectorAll('.fill-group').forEach((group) => {
-                const input = group.querySelector('input');
-                const groupContainer = group.closest('div[data-answers]');
-                if (!groupContainer) return;
-                const answers = JSON.parse(groupContainer.dataset.answers);
-                const groupsInContainer = Array.from(groupContainer.querySelectorAll('.fill-group'));
-                const groupIndex = groupsInContainer.indexOf(group);
-                
-                if (groupIndex !== -1 && groupIndex < answers.length) {
-                    const correctAnswer = answers[groupIndex];
-                    
-                    if (input.value.trim() === correctAnswer) {
-                        totalScore += 2;
-                        input.classList.add('correct');
-                    } else {
-                        input.classList.add('wrong');
-                        const hint = document.createElement('div');
-                        hint.className = 'answer-hint';
-                        hint.textContent = correctAnswer;
-                        group.querySelector('.hint-container').appendChild(hint);
-                    }
-                }
-            });
-
-            document.getElementById('scoreDisplay').textContent = `总分：${totalScore}分`;
-            window.scrollTo(0, 0);
-        }
-
-        // 以下原有核心逻辑保持不变...
         const categories = {
             '材料': [], '螺纹': [], '传动': [], 
             '齿轮': [], '轴承': [], '制图': []
@@ -286,6 +215,39 @@
         questions.forEach(q => q.categories.forEach(cat => {
             if (categories[cat]) categories[cat].push(q);
         }));
+
+        function showPasswordModal() {
+            document.getElementById('passwordModal').style.display = 'block';
+        }
+
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            if (input.value === '2426') {
+                document.getElementById("examPage").style.display = "block";
+                document.getElementById("startBtn").style.display = "none";
+                document.getElementById('passwordModal').style.display = 'none';
+                startTime = new Date();
+                generateExam();
+            } else {
+                alert("密码错误，请重新输入！");
+                input.value = '';
+            }
+        }
+
+        document.addEventListener('change', function(e) {
+            if (e.target.type === 'radio') {
+                const questionDiv = e.target.closest('.question');
+                if (questionDiv) questionDiv.classList.add('answered');
+            }
+        });
+
+        function calculateDuration() {
+            const endTime = new Date();
+            const duration = Math.floor((endTime - startTime) / 1000);
+            const minutes = Math.floor(duration / 60).toString().padStart(2, '0');
+            const seconds = (duration % 60).toString().padStart(2, '0');
+            return `${minutes}分${seconds}秒`;
+        }
 
         function generateExam() {
             const container = document.getElementById('questions');
@@ -382,14 +344,88 @@
         function checkAllAnswered() {
             const radioCompleted = [...document.querySelectorAll('.multiple-choice')]
                 .every(group => group.querySelector('input[type="radio"]:checked') !== null);
-
             const fillCompleted = [...document.querySelectorAll('.fill-line')]
                 .every(input => input.value.trim() !== '');
-
             return radioCompleted && fillCompleted;
         }
 
-        // 工具函数
+        function handleSubmit() {
+            if (!checkAllAnswered()) {
+                alert("你还有题目未作答，请继续答题！");
+                return;
+            }
+
+            document.getElementById('timeDisplay').textContent = `用时：${calculateDuration()}`;
+            
+            const btn = document.getElementById('submitBtn');
+            btn.onclick = () => location.reload();
+            btn.textContent = '重新测试';
+
+            const allInputs = document.querySelectorAll('input');
+            allInputs.forEach(input => input.disabled = true);
+
+            let totalScore = 0;
+
+            document.querySelectorAll('.multiple-choice').forEach(question => {
+                const correctAnswer = question.dataset.correct;
+                const selected = question.querySelector('input:checked');
+
+                if (selected?.value !== correctAnswer) {
+                    question.classList.add('wrong-answer');
+                }
+
+                if (correctAnswer) {
+                    const correctOption = question.querySelector(`input[value="${correctAnswer}"]`);
+                    
+                    if (selected?.value === correctAnswer) {
+                        totalScore += 2;
+                        const mark = document.createElement('span');
+                        mark.className = 'correct-mark';
+                        mark.textContent = '✓';
+                        selected.parentElement.appendChild(mark);
+                    } else {
+                        if (selected) {
+                            const mark = document.createElement('span');
+                            mark.className = 'wrong-mark';
+                            mark.textContent = '✗';
+                            selected.parentElement.appendChild(mark);
+                        }
+                        const correctMark = document.createElement('span');
+                        correctMark.className = 'correct-mark';
+                        correctMark.textContent = `(${correctOption.parentElement.textContent.trim()})`;
+                        question.appendChild(correctMark);
+                    }
+                }
+            });
+
+            document.querySelectorAll('.fill-group').forEach((group) => {
+                const input = group.querySelector('input');
+                const groupContainer = group.closest('div[data-answers]');
+                if (!groupContainer) return;
+                const answers = JSON.parse(groupContainer.dataset.answers);
+                const groupsInContainer = Array.from(groupContainer.querySelectorAll('.fill-group'));
+                const groupIndex = groupsInContainer.indexOf(group);
+                
+                if (groupIndex !== -1 && groupIndex < answers.length) {
+                    const correctAnswer = answers[groupIndex];
+                    
+                    if (input.value.trim() === correctAnswer) {
+                        totalScore += 2;
+                        input.classList.add('correct');
+                    } else {
+                        input.classList.add('wrong');
+                        const hint = document.createElement('div');
+                        hint.className = 'answer-hint';
+                        hint.textContent = correctAnswer;
+                        group.querySelector('.hint-container').appendChild(hint);
+                    }
+                }
+            });
+
+            document.getElementById('scoreDisplay').textContent = `总分：${totalScore}分`;
+            window.scrollTo(0, 0);
+        }
+
         function getRandomQuestions(arr, count) {
             return shuffle([...arr]).slice(0, count);
         }
