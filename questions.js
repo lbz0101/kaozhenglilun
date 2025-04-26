@@ -1258,5 +1258,96 @@ const questions  = [
         correct: "B",
         categories: ["材料"],
         knowledge: ["铸造材料"]
-    }
+    },
+  {
+question: "在下列钢号中，属于碳素结构钢的是",
+options: ["A: 45", "B: T7A", "C: 9SiCr", "D: 40Cr"],
+correct: "A",
+categories: ["材料"],
+knowledge: ["钢材分类"]
+},
+{
+question: "适合用于制造手锤的材料是",
+options: ["A: 结构钢", "B: 工具钢", "C: 特殊性能钢", "D: 铸铁"],
+correct: "B",
+categories: ["材料"],
+knowledge: ["工具材料"]
+},
+{
+question: "常用的联接螺纹是",
+options: ["A: 双线左旋", "B: 双线右旋", "C: 单线左旋", "D: 单线右旋"],
+correct: "D",
+categories: ["螺纹"],
+knowledge: ["螺纹类型"]
+},
+{
+question: "一般管螺纹的牙型角为",
+options: ["A: 60°", "B: 55°", "C: 30°", "D: 0°"],
+correct: "B",
+categories: ["螺纹"],
+knowledge: ["螺纹参数"]
+},
+{
+question: "下列带传动中，不属于摩擦型带传动的是",
+options: ["A: 同步带传动", "B: 圆带传动", "C: V带传动", "D: 平带传动"],
+correct: "A",
+categories: ["传动"],
+knowledge: ["带传动类型"]
+},
+{
+question: "一对标准直齿圆柱齿轮，模数2mm，大齿轮60齿，小齿轮40齿，中心距为",
+options: ["A: 130mm", "B: 120mm", "C: 100mm", "D: 80mm"],
+correct: "C",
+categories: ["齿轮"],
+knowledge: ["齿轮计算"]
+},
+{
+question: "下列传动中，属于啮合类传动的是",
+options: ["A: 平带传动", "B: 普通V带传动", "C: 圆带传动", "D: 链传动"],
+correct: "D",
+categories: ["传动"],
+knowledge: ["传动类型"]
+},
+{
+question: "双摇杆机构具有",
+options: ["A: 两个曲柄", "B: 一个曲柄", "C: 两个摇杆", "D: 一个摇杆"],
+correct: "C",
+categories: ["机构"],
+knowledge: ["四杆机构"]
+},
+{
+question: "生产实际中最为常见的凸轮是",
+options: ["A: 圆柱凸轮", "B: 盘形凸轮", "C: 移动凸轮", "D: 曲面凸轮"],
+correct: "B",
+categories: ["传动"],
+knowledge: ["凸轮类型"]
+},
+{
+question: "轴由滚动轴承支承时，轴颈直径需符合轴承的",
+options: ["A: 宽度系列", "B: 内径系列", "C: 高度系列", "D: 外径系列"],
+correct: "B",
+categories: ["轴承"],
+knowledge: ["轴承配合"]
+},
+{
+question: "以键的两侧面为工作面的是",
+options: ["A: 普通楔键", "B: 钩头楔键", "C: 半圆键", "D: 切向键"],
+correct: "C",
+categories: ["传动"],
+knowledge: ["键连接"]
+},
+{
+question: "采用5:1比例绘制机件图样时，该比例为",
+options: ["A: 任意比例", "B: 放大比例", "C: 缩小比例", "D: 原值比例"],
+correct: "B",
+categories: ["制图"],
+knowledge: ["比例标准"]
+},
+{
+question: "剖视图中绘制外螺纹大径用",
+options: ["A: 虚线", "B: 点画线", "C: 细实线", "D: 粗实线"],
+correct: "D",
+categories: ["制图"],
+knowledge: ["螺纹画法"]
+}
 ];
