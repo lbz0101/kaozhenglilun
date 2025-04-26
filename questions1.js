@@ -58,7 +58,7 @@ const questionBank = {
         { answers: ["HT150"] },
         { answers: ["局部"] },
         { answers: ["100", "72"] },
-        { answers: ["0.05", "62.025", "61.075"] },
+        { answers: ["0.05", "62.025", "61.975"] },
         { answers: ["2", "15"] },
         { answers: ["6.3"] },
         { answers: ["垂直度", "Φ0.03", "A"] }
