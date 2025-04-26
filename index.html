@@ -37,6 +37,12 @@
         .wrong-answer {
             background: #ffebee !important;
         }
+        .creator {
+            font-size: 20px;
+            color: #666;
+            text-align: center;
+            margin: 7px 3 15px;
+        }
         #scoreContainer {
             position: sticky;
             top: 8px;
@@ -187,13 +193,10 @@
         </div>
     </div>
 
-    <!-- 新增的两行标题 -->
-    <div style="text-align: center; margin-bottom: 20px;">
-        <div style="color: #FFA500; font-size: 28px; margin-bottom: 10px;">由 高州一职 Mr黎制作</div>
-        <div style="color: #3498db; font-size: 32px; font-weight: bold;">真题考试系统</div>
-    </div>
     <button id="startBtn" onclick="showPasswordModal()">开始答题</button>
     <div id="examPage" style="display: none;">
+        <h1>理论真题测试（删减作图题20分）
+            <div class="creator">(由 高州一职Mr黎 制作)</div>
             <div id="scoreContainer">
                 <div id="scoreDisplay"></div>
                 <div id="timeDisplay"></div>
