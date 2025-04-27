@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>考证理论在线测试（总分80）</title>
     <style>
-        /* 优化后的图片放大样式 */
+        /* 图片放大样式 */
         #zoomOverlay {
             display: none;
             position: fixed;
@@ -16,20 +16,18 @@
             background: rgba(0,0,0,0.9);
             z-index: 2000;
             touch-action: none;
-            overflow: hidden;
         }
         #zoomedImg {
             position: absolute;
-            will-change: transform;
-            transform: translate3d(-50%, -50%, 0) scale(1);
-            transition: transform 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
-            max-width: 100%;
-            max-height: 100%;
             left: 50%;
             top: 50%;
+            transform: translate(-50%, -50%);
+            transition: transform 0.3s;
+            max-width: 100%;
+            max-height: 100%;
         }
 
-        /* 分数显示美化 */
+        /* 美化分数显示 */
         #scoreContainer {
             position: sticky;
             top: 8px;
@@ -48,17 +46,20 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-family: Arial, sans-serif;
         }
         #scoreDisplay {
             background: #3498db;
             color: white;
+            border: 2px solid #2980b9;
         }
         #timeDisplay {
             background: #2ecc71;
             color: white;
+            border: 2px solid #27ae60;
         }
 
-        /* 完整原有CSS样式 */
+        /* 以下是完整的原有CSS样式 */
         #overlay {
             opacity: 0;
             transition: opacity 0.3s;
@@ -145,7 +146,7 @@
         }
         .fill-group {
             position: relative;
-            margin: 0 4px;
+            margin: 8px 4px;
             display: inline-block;
         }
         .fill-line {
@@ -222,8 +223,7 @@
     <!-- 图片放大层 -->
     <div id="zoomOverlay" 
          ontouchstart="handleTouchStart(event)" 
-         ontouchmove="handleTouchMove(event)" 
-         ontouchend="handleTouchEnd(event)"
+         ontouchmove="handleTouchMove(event)"
          onclick="hideZoom()">
         <img id="zoomedImg" ondblclick="resetZoom()">
     </div>
@@ -245,46 +245,45 @@
     <script src="questions.js"></script>
     <script src="questions1.js"></script>
     <script>
-        // ==================== 优化后的图片缩放功能 ====================
+        // ==================== 图片缩放功能 ====================
         let currentScale = 1;
+        let lastDistance = null;
         let isDragging = false;
         let startX = 0, startY = 0, translateX = 0, translateY = 0;
-        let lastDistance = null;
-        let lastScaleTime = 0;
 
+        // 移动端双指缩放
         function handleTouchStart(e) {
             if (e.touches.length === 2) {
-                e.preventDefault();
                 lastDistance = Math.hypot(
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
                 );
+            } else {
+                isDragging = true;
+                startX = e.touches[0].clientX - translateX;
+                startY = e.touches[0].clientY - translateY;
             }
         }
 
         function handleTouchMove(e) {
             if (e.touches.length === 2) {
                 e.preventDefault();
-                const now = Date.now();
-                if (now - lastScaleTime < 16) return;
-                lastScaleTime = now;
-
                 const newDistance = Math.hypot(
                     e.touches[0].clientX - e.touches[1].clientX,
                     e.touches[0].clientY - e.touches[1].clientY
                 );
-                
                 const delta = newDistance / lastDistance;
                 currentScale = Math.min(Math.max(0.5, currentScale * delta), 3);
                 lastDistance = newDistance;
                 updateImageTransform();
+            } else if (isDragging) {
+                translateX = e.touches[0].clientX - startX;
+                translateY = e.touches[0].clientY - startY;
+                updateImageTransform();
             }
         }
 
-        function handleTouchEnd() {
-            lastDistance = null;
-        }
-
+        // PC端功能
         document.getElementById('zoomOverlay').addEventListener('mousedown', function(e) {
             isDragging = true;
             startX = e.clientX - translateX;
@@ -292,24 +291,21 @@
             this.style.cursor = 'grabbing';
         });
 
-        function handleMouseMove(e) {
-            if (!isDragging) return;
-            translateX = e.clientX - startX;
-            translateY = e.clientY - startY;
-            requestAnimationFrame(updateImageTransform);
-        }
+        document.addEventListener('mousemove', function(e) {
+            if (isDragging) {
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                updateImageTransform();
+            }
+        });
 
-        function handleMouseUp() {
+        document.addEventListener('mouseup', function() {
             isDragging = false;
             document.getElementById('zoomOverlay').style.cursor = 'grab';
-        }
+        });
 
         document.getElementById('zoomOverlay').addEventListener('wheel', function(e) {
             e.preventDefault();
-            const now = Date.now();
-            if (now - lastScaleTime < 16) return;
-            lastScaleTime = now;
-
             const delta = e.deltaY > 0 ? 0.9 : 1.1;
             currentScale = Math.min(Math.max(0.5, currentScale * delta), 5);
             updateImageTransform();
@@ -327,11 +323,10 @@
 
         function updateImageTransform() {
             const img = document.getElementById('zoomedImg');
-            img.style.transform = 
-                `translate3d(${translateX}px, ${translateY}px, 0) scale(${currentScale})`;
+            img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale}) translate(-50%, -50%)`;
         }
 
-        // ==================== 原有完整功能 ====================
+        // ==================== 原有完整功能代码 ====================
         window.onerror = function(message) {
             console.log('JS Error:' + message);
         };
@@ -511,6 +506,7 @@
 
             var totalScore = 0;
 
+            // 批改选择题
             var choiceQuestions = document.querySelectorAll('.multiple-choice');
             for (var i = 0; i < choiceQuestions.length; i++) {
                 var question = choiceQuestions[i];
@@ -545,6 +541,7 @@
                 }
             }
 
+            // 批改填空题
             var fillGroups = document.querySelectorAll('.fill-group');
             for (var i = 0; i < fillGroups.length; i++) {
                 var group = fillGroups[i];
@@ -575,6 +572,7 @@
             window.scrollTo(0, 0);
         }
 
+        // 工具函数：随机选题
         function getRandomQuestions(arr, count) {
             var copy = arr.slice();
             for (var i = copy.length - 1; i > 0; i--) {
@@ -586,6 +584,7 @@
             return copy.slice(0, count);
         }
 
+        // 工具函数：生成随机索引
         function getRandomIndices(max, count) {
             var indices = [];
             for (var i = 0; i < max; i++) indices.push(i);
@@ -598,11 +597,13 @@
             return indices.slice(0, count);
         }
 
+        // 工具函数：随机获取填空题key
         function getRandomKey(obj) {
             var keys = Object.keys(obj);
             return keys[Math.floor(Math.random() * keys.length)];
         }
 
+        // 图片点击显示功能
         document.addEventListener('click', function(e) {
             if (e.target.tagName === 'IMG' && e.target.id !== 'zoomedImg') {
                 document.getElementById('zoomedImg').src = e.target.src;
@@ -610,12 +611,6 @@
                 resetZoom();
             }
         });
-
-        // 更新事件监听器
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
     </script>
 </body>
 </html>
