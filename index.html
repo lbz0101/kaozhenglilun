@@ -15,18 +15,48 @@
             height: 100%;
             background: rgba(0,0,0,0.9);
             z-index: 2000;
-            overflow: scroll;
-            cursor: grab;
+            touch-action: none;
         }
         #zoomedImg {
             position: absolute;
-            transform-origin: 0 0;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
             transition: transform 0.3s;
+            max-width: 100%;
+            max-height: 100%;
         }
 
-        /* 填空题行距调整 */
-        .fill-question .fill-group {
-            margin: 8px 4px;
+        /* 美化分数显示 */
+        #scoreContainer {
+            position: sticky;
+            top: 8px;
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+        #scoreDisplay, #timeDisplay {
+            width: 140px;
+            height: 50px;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-family: Arial, sans-serif;
+        }
+        #scoreDisplay {
+            background: #3498db;
+            color: white;
+            border: 2px solid #2980b9;
+        }
+        #timeDisplay {
+            background: #2ecc71;
+            color: white;
+            border: 2px solid #27ae60;
         }
 
         /* 以下是完整的原有CSS样式 */
@@ -68,29 +98,6 @@
             color: #666;
             text-align: center;
             margin: 7px 3px 15px;
-        }
-        #scoreContainer {
-            position: sticky;
-            top: 8px;
-            display: flex;
-            gap: 20px;
-            justify-content: flex-end;
-            margin-bottom: 15px;
-        }
-        #scoreDisplay {
-            background: #3498db;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 3px;
-            font-size: 36px !important;
-        }
-        #timeDisplay {
-            font-size: 20px !important;
-            color: #2c3e50;
-            background: #ecf0f1;
-            padding: 4px 8px;
-            border-radius: 3px;
-            margin-top: 0;
         }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -139,7 +146,7 @@
         }
         .fill-group {
             position: relative;
-            margin: 0 4px;
+            margin: 8px 4px;
             display: inline-block;
         }
         .fill-line {
@@ -214,14 +221,17 @@
 </head>
 <body>
     <!-- 图片放大层 -->
-    <div id="zoomOverlay" onclick="hideZoom()">
+    <div id="zoomOverlay" 
+         ontouchstart="handleTouchStart(event)" 
+         ontouchmove="handleTouchMove(event)"
+         onclick="hideZoom()">
         <img id="zoomedImg" ondblclick="resetZoom()">
     </div>
 
     <button id="startBtn" disabled onclick="handleStart()">开始答题</button>
     
     <div id="overlay">
-        <h1>考证理论测试
+        <h1>理论真题测试（删减作图题20分）
             <div class="creator">(由 高州一职Mr黎 制作)</div>
             <div id="scoreContainer">
                 <div id="scoreDisplay"></div>
@@ -237,20 +247,43 @@
     <script>
         // ==================== 图片缩放功能 ====================
         let currentScale = 1;
+        let lastDistance = null;
         let isDragging = false;
         let startX = 0, startY = 0, translateX = 0, translateY = 0;
 
-        function resetZoom() {
-            currentScale = 1;
-            translateX = translateY = 0;
-            updateImageTransform();
-            return false;
+        // 移动端双指缩放
+        function handleTouchStart(e) {
+            if (e.touches.length === 2) {
+                lastDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+            } else {
+                isDragging = true;
+                startX = e.touches[0].clientX - translateX;
+                startY = e.touches[0].clientY - translateY;
+            }
         }
 
-        function hideZoom() {
-            document.getElementById('zoomOverlay').style.display = 'none';
+        function handleTouchMove(e) {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                const newDistance = Math.hypot(
+                    e.touches[0].clientX - e.touches[1].clientX,
+                    e.touches[0].clientY - e.touches[1].clientY
+                );
+                const delta = newDistance / lastDistance;
+                currentScale = Math.min(Math.max(0.5, currentScale * delta), 3);
+                lastDistance = newDistance;
+                updateImageTransform();
+            } else if (isDragging) {
+                translateX = e.touches[0].clientX - startX;
+                translateY = e.touches[0].clientY - startY;
+                updateImageTransform();
+            }
         }
 
+        // PC端功能
         document.getElementById('zoomOverlay').addEventListener('mousedown', function(e) {
             isDragging = true;
             startX = e.clientX - translateX;
@@ -278,18 +311,26 @@
             updateImageTransform();
         });
 
-        function updateImageTransform() {
-            const img = document.getElementById('zoomedImg');
-            img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+        function resetZoom() {
+            currentScale = 1;
+            translateX = translateY = 0;
+            updateImageTransform();
         }
 
-        // ==================== 原有完整JavaScript代码 ====================
-        // 错误监控
+        function hideZoom() {
+            document.getElementById('zoomOverlay').style.display = 'none';
+        }
+
+        function updateImageTransform() {
+            const img = document.getElementById('zoomedImg');
+            img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale}) translate(-50%, -50%)`;
+        }
+
+        // ==================== 原有完整功能代码 ====================
         window.onerror = function(message) {
             console.log('JS Error:' + message);
         };
 
-        // 初始化启用开始按钮
         window.addEventListener('load', function() {
             document.getElementById('startBtn').disabled = false;
         });
@@ -300,7 +341,6 @@
             '齿轮': [], '轴承': [], '制图': []
         };
 
-        // 初始化题目分类
         for (var i = 0; i < questions.length; i++) {
             var q = questions[i];
             for (var j = 0; j < q.categories.length; j++) {
@@ -311,9 +351,8 @@
             }
         }
 
-        // 开始考试
         function handleStart() {
-            var password = prompt("请输入密码");
+            var password = prompt("请输入考试密码（初始密码：2426）：");
             if (password === "2426") {
                 document.getElementById("overlay").className += ' visible';
                 document.getElementById("startBtn").style.display = "none";
@@ -324,7 +363,6 @@
             }
         }
 
-        // 监听选项变化
         document.addEventListener('change', function(e) {
             if (e.target.type === 'radio') {
                 var questionDiv = e.target.closest('.question');
@@ -334,7 +372,6 @@
             }
         });
 
-        // 计算考试用时
         function calculateDuration() {
             var endTime = new Date();
             var duration = Math.floor((endTime - startTime) / 1000);
@@ -343,12 +380,10 @@
             return minutes + '分' + seconds + '秒';
         }
 
-        // 生成试卷
         function generateExam() {
             var container = document.getElementById('questions');
             container.innerHTML = '';
 
-            // 组合各分类题目
             var selectedQuestions = []
                 .concat(getRandomQuestions(categories.材料, 2))
                 .concat(getRandomQuestions(categories.螺纹, 2))
@@ -357,24 +392,20 @@
                 .concat(getRandomQuestions(categories.轴承, 2))
                 .concat(getRandomQuestions(categories.制图, 4));
 
-            // 添加选择题
             for (var i = 0; i < selectedQuestions.length; i++) {
                 container.appendChild(createQuestionElement(selectedQuestions[i], i + 1));
             }
 
-            // 添加图片题
             var imgAnswers = 'ACBDBAADBCADBACCADCBBBCCADAAABBACDBDABCACCBBAABADDABACABCAAABBCAAA';
             var indices = getRandomIndices(66, 7);
             for (var i = 0; i < indices.length; i++) {
                 container.appendChild(createImageQuestion(indices[i], imgAnswers[indices[i]], container.children.length + 1));
             }
 
-            // 添加填空题
             var fillKey = getRandomKey(questionBank);
             container.appendChild(createFillQuestion(fillKey, container.children.length + 1));
         }
 
-        // 创建选择题元素
         function createQuestionElement(question, number) {
             var div = document.createElement('div');
             div.className = 'question multiple-choice';
@@ -388,7 +419,6 @@
             return div;
         }
 
-        // 创建图片题元素
         function createImageQuestion(imgIndex, correctAnswer, number) {
             var div = document.createElement('div');
             div.className = 'question multiple-choice';
@@ -403,7 +433,6 @@
             return div;
         }
 
-        // 创建填空题元素
         function createFillQuestion(key, number) {
             if (!questionBank[key]) {
                 console.error('无效的填空题key:', key);
@@ -436,7 +465,6 @@
             return div;
         }
 
-        // 检查是否全部作答
         function checkAllAnswered() {
             var radioGroups = document.querySelectorAll('.multiple-choice');
             var allRadioAnswered = true;
@@ -459,7 +487,6 @@
             return allRadioAnswered && allFillAnswered;
         }
 
-        // 提交试卷
         function handleSubmit() {
             if (!checkAllAnswered()) {
                 alert("你还有题目未作答，请继续答题！");
