@@ -15,25 +15,18 @@
             height: 100%;
             background: rgba(0,0,0,0.9);
             z-index: 2000;
-            cursor: zoom-out;
+            overflow: scroll;
+            cursor: grab;
         }
         #zoomedImg {
             position: absolute;
-            max-width: 90%;
-            max-height: 90%;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            transform-origin: 0 0;
+            transition: transform 0.3s;
         }
 
-        /* 分数显示布局修改 */
-        #scoreContainer {
-            position: sticky;
-            top: 8px;
-            display: flex;
-            gap: 20px;
-            justify-content: flex-end;
-            margin-bottom: 15px;
+        /* 填空题行距调整 */
+        .fill-question .fill-group {
+            margin: 8px 4px;
         }
 
         /* 以下是完整的原有CSS样式 */
@@ -75,6 +68,14 @@
             color: #666;
             text-align: center;
             margin: 7px 3px 15px;
+        }
+        #scoreContainer {
+            position: sticky;
+            top: 8px;
+            display: flex;
+            gap: 20px;
+            justify-content: flex-end;
+            margin-bottom: 15px;
         }
         #scoreDisplay {
             background: #3498db;
@@ -213,14 +214,14 @@
 </head>
 <body>
     <!-- 图片放大层 -->
-    <div id="zoomOverlay" onclick="this.style.display='none'">
-        <img id="zoomedImg">
+    <div id="zoomOverlay" onclick="hideZoom()">
+        <img id="zoomedImg" ondblclick="resetZoom()">
     </div>
 
     <button id="startBtn" disabled onclick="handleStart()">开始答题</button>
     
     <div id="overlay">
-        <h1>机械证理论测试
+        <h1>考证理论测试
             <div class="creator">(由 高州一职Mr黎 制作)</div>
             <div id="scoreContainer">
                 <div id="scoreDisplay"></div>
@@ -234,15 +235,55 @@
     <script src="questions.js"></script>
     <script src="questions1.js"></script>
     <script>
-        // ==================== 完整JavaScript代码 ====================
-        // 图片点击放大功能
-        document.addEventListener('click', function(e) {
-            if (e.target.tagName === 'IMG') {
-                document.getElementById('zoomedImg').src = e.target.src;
-                document.getElementById('zoomOverlay').style.display = 'block';
+        // ==================== 图片缩放功能 ====================
+        let currentScale = 1;
+        let isDragging = false;
+        let startX = 0, startY = 0, translateX = 0, translateY = 0;
+
+        function resetZoom() {
+            currentScale = 1;
+            translateX = translateY = 0;
+            updateImageTransform();
+            return false;
+        }
+
+        function hideZoom() {
+            document.getElementById('zoomOverlay').style.display = 'none';
+        }
+
+        document.getElementById('zoomOverlay').addEventListener('mousedown', function(e) {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+            this.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (isDragging) {
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                updateImageTransform();
             }
         });
 
+        document.addEventListener('mouseup', function() {
+            isDragging = false;
+            document.getElementById('zoomOverlay').style.cursor = 'grab';
+        });
+
+        document.getElementById('zoomOverlay').addEventListener('wheel', function(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            currentScale = Math.min(Math.max(0.5, currentScale * delta), 5);
+            updateImageTransform();
+        });
+
+        function updateImageTransform() {
+            const img = document.getElementById('zoomedImg');
+            img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+        }
+
+        // ==================== 原有完整JavaScript代码 ====================
         // 错误监控
         window.onerror = function(message) {
             console.log('JS Error:' + message);
@@ -270,9 +311,9 @@
             }
         }
 
-        // 开始考试（已添加密码提示）
+        // 开始考试
         function handleStart() {
-            var password = prompt("请输入密码：");
+            var password = prompt("请输入密码");
             if (password === "2426") {
                 document.getElementById("overlay").className += ' visible';
                 document.getElementById("startBtn").style.display = "none";
@@ -534,6 +575,15 @@
             var keys = Object.keys(obj);
             return keys[Math.floor(Math.random() * keys.length)];
         }
+
+        // 图片点击显示功能
+        document.addEventListener('click', function(e) {
+            if (e.target.tagName === 'IMG' && e.target.id !== 'zoomedImg') {
+                document.getElementById('zoomedImg').src = e.target.src;
+                document.getElementById('zoomOverlay').style.display = 'block';
+                resetZoom();
+            }
+        });
     </script>
 </body>
 </html>
