@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>考证理论在线测试（总分80）</title>
     <style>
         #overlay {
@@ -201,24 +203,38 @@
     <script src="questions.js"></script>
     <script src="questions1.js"></script>
     <script>
-        window.addEventListener('load', () => {
+        // 全局错误监控
+        window.onerror = function(message, source, lineno) {
+            console.log('JS Error:' + message + ' at ' + lineno + '行');
+        };
+
+        // 初始化启用开始按钮
+        window.addEventListener('load', function() {
             document.getElementById('startBtn').disabled = false;
         });
 
-        let startTime;
-        const categories = {
-            '材料': [], '螺纹': [], '传动': [], 
+        var startTime;
+        var categories = {
+            '材料': [], '螺纹': [], '传动': [],
             '齿轮': [], '轴承': [], '制图': []
         };
 
-        questions.forEach(q => q.categories.forEach(cat => {
-            if (categories[cat]) categories[cat].push(q);
-        }));
+        // 初始化题目分类
+        for (var i = 0; i < questions.length; i++) {
+            var q = questions[i];
+            for (var j = 0; j < q.categories.length; j++) {
+                var cat = q.categories[j];
+                if (categories[cat]) {
+                    categories[cat].push(q);
+                }
+            }
+        }
 
+        // 开始考试
         function handleStart() {
-            const password = prompt("请输入考试密码：");
+            var password = prompt("请输入考试密码：");
             if (password === "2426") {
-                document.getElementById("overlay").classList.add("visible");
+                document.getElementById("overlay").className += ' visible';
                 document.getElementById("startBtn").style.display = "none";
                 startTime = new Date();
                 generateExam();
@@ -227,217 +243,256 @@
             }
         }
 
+        // 监听选项变化
         document.addEventListener('change', function(e) {
             if (e.target.type === 'radio') {
-                const questionDiv = e.target.closest('.question');
-                if (questionDiv) questionDiv.classList.add('answered');
+                var questionDiv = e.target.closest('.question');
+                if (questionDiv) {
+                    questionDiv.className += ' answered';
+                }
             }
         });
 
+        // 计算考试用时
         function calculateDuration() {
-            const endTime = new Date();
-            const duration = Math.floor((endTime - startTime) / 1000);
-            const minutes = Math.floor(duration / 60).toString().padStart(2, '0');
-            const seconds = (duration % 60).toString().padStart(2, '0');
-            return `${minutes}分${seconds}秒`;
+            var endTime = new Date();
+            var duration = Math.floor((endTime - startTime) / 1000);
+            var minutes = Math.floor(duration / 60).toString().padStart(2, '0');
+            var seconds = (duration % 60).toString().padStart(2, '0');
+            return minutes + '分' + seconds + '秒';
         }
 
+        // 生成试卷
         function generateExam() {
-            const container = document.getElementById('questions');
+            var container = document.getElementById('questions');
             container.innerHTML = '';
 
-            const selectedQuestions = [
-                ...getRandomQuestions(categories.材料, 2),
-                ...getRandomQuestions(categories.螺纹, 2),
-                ...getRandomQuestions(categories.传动, 5),
-                ...getRandomQuestions(categories.齿轮, 3),
-                ...getRandomQuestions(categories.轴承, 2),
-                ...getRandomQuestions(categories.制图, 4)
-            ];
+            // 组合各分类题目
+            var selectedQuestions = []
+                .concat(getRandomQuestions(categories.材料, 2))
+                .concat(getRandomQuestions(categories.螺纹, 2))
+                .concat(getRandomQuestions(categories.传动, 5))
+                .concat(getRandomQuestions(categories.齿轮, 3))
+                .concat(getRandomQuestions(categories.轴承, 2))
+                .concat(getRandomQuestions(categories.制图, 4));
 
-            selectedQuestions.forEach((q, index) => {
-                container.appendChild(createQuestionElement(q, index + 1));
-            });
+            // 添加选择题
+            for (var i = 0; i < selectedQuestions.length; i++) {
+                container.appendChild(createQuestionElement(selectedQuestions[i], i + 1));
+            }
 
-            const imgAnswers = 'ACBDBAADBCADBACCADCBBBCCADAAABBACDBDABCACCBBAABADDABACABCAAABBCAAA';
-            getRandomIndices(66, 7).forEach((idx, i) => {
-                container.appendChild(createImageQuestion(
-                    idx + 1, 
-                    imgAnswers[idx], 
-                    selectedQuestions.length + i + 1
-                ));
-            });
+            // 添加图片题
+            var imgAnswers = 'ACBDBAADBCADBACCADCBBBCCADAAABBACDBDABCACCBBAABADDABACABCAAABBCAAA';
+            var indices = getRandomIndices(66, 7);
+            for (var i = 0; i < indices.length; i++) {
+                container.appendChild(createImageQuestion(indices[i], imgAnswers[indices[i]], container.children.length + 1));
+            }
 
-            const fillKey = getRandomKey(questionBank);
+            // 添加填空题
+            var fillKey = getRandomKey(questionBank);
             container.appendChild(createFillQuestion(fillKey, container.children.length + 1));
         }
 
+        // 创建选择题元素
         function createQuestionElement(question, number) {
-            const div = document.createElement('div');
+            var div = document.createElement('div');
             div.className = 'question multiple-choice';
-            div.innerHTML = `
-                <p>${number}. ${question.question}</p>
-                ${question.options.map(opt => `
-                    <label>
-                        <input type="radio" name="q${number}" value="${opt[0]}">
-                        ${opt}
-                    </label>
-                `).join('')}
-            `;
-            div.dataset.correct = question.correct;
+            var html = '<p>' + number + '. ' + question.question + '</p>';
+            for (var k = 0; k < question.options.length; k++) {
+                var opt = question.options[k];
+                html += '<label><input type="radio" name="q' + number + '" value="' + opt[0] + '">' + opt + '</label>';
+            }
+            div.innerHTML = html;
+            div.setAttribute('data-correct', question.correct);
             return div;
         }
 
+        // 创建图片题元素
         function createImageQuestion(imgIndex, correctAnswer, number) {
-            const div = document.createElement('div');
+            var div = document.createElement('div');
             div.className = 'question multiple-choice';
-            div.innerHTML = `
-                <p>${number}. <img src="images/${imgIndex}.jpg"></p>
-                <div class="options-row">
-                    <label><input type="radio" name="img${number}" value="A">A</label>
-                    <label><input type="radio" name="img${number}" value="B">B</label>
-                    <label><input type="radio" name="img${number}" value="C">C</label>
-                    <label><input type="radio" name="img${number}" value="D">D</label>
-                </div>
-            `;
-            div.dataset.correct = correctAnswer;
+            div.innerHTML = '<p>' + number + '. <img src="images/' + imgIndex + '.jpg" onerror="this.style.display=\'none\'"></p>' +
+                '<div class="options-row">' +
+                '<label><input type="radio" name="img' + number + '" value="A">A</label>' +
+                '<label><input type="radio" name="img' + number + '" value="B">B</label>' +
+                '<label><input type="radio" name="img' + number + '" value="C">C</label>' +
+                '<label><input type="radio" name="img' + number + '" value="D">D</label>' +
+                '</div>';
+            div.setAttribute('data-correct', correctAnswer);
             return div;
         }
 
+        // 创建填空题元素（关键修改）
         function createFillQuestion(key, number) {
-            const div = document.createElement('div');
-            div.className = 'question fill-question';
-            div.innerHTML = `
-                <p>${number}. <img src="images1/${key}"></p>
-                <div class="fill-answers"></div>
-            `;
+            if (!questionBank[key]) {
+                console.error('无效的填空题key:', key);
+                return document.createElement('div');
+            }
 
-            const answersContainer = div.querySelector('.fill-answers');
-            questionBank[key].forEach((item, index) => {
-                const qDiv = document.createElement('div');
-                qDiv.innerHTML = `<p>（${index + 1}）</p>`;
+            var div = document.createElement('div');
+            div.className = 'question fill-question';
+            div.innerHTML = '<p>' + number + '. <img src="images1/' + key + '" onerror="this.style.display=\'none\'"></p><div class="fill-answers"></div>';
+
+            var answersContainer = div.querySelector('.fill-answers');
+            var items = questionBank[key];
+            
+            for (var i = 0; i < items.length; i++) {
+                var qDiv = document.createElement('div');
+                qDiv.innerHTML = '<p>（' + (i + 1) + '）</p>';
+                var answers = items[i].answers;
                 
-                item.answers.forEach(() => {
-                    const group = document.createElement('div');
+                for (var j = 0; j < answers.length; j++) {
+                    var group = document.createElement('div');
                     group.className = 'fill-group';
-                    group.innerHTML = `
-                        <input type="text" class="fill-line">
-                        <div class="hint-container"></div>
-                    `;
+                    group.innerHTML = '<input type="text" class="fill-line"><div class="hint-container"></div>';
                     qDiv.appendChild(group);
-                });
+                }
                 
-                qDiv.dataset.answers = JSON.stringify(item.answers);
+                qDiv.setAttribute('data-answers', JSON.stringify(answers));
                 answersContainer.appendChild(qDiv);
-            });
+            }
 
             return div;
         }
 
+        // 检查是否全部作答
         function checkAllAnswered() {
-            const radioCompleted = [...document.querySelectorAll('.multiple-choice')]
-                .every(group => group.querySelector('input[type="radio"]:checked') !== null);
-            const fillCompleted = [...document.querySelectorAll('.fill-line')]
-                .every(input => input.value.trim() !== '');
-            return radioCompleted && fillCompleted;
+            var radioGroups = document.querySelectorAll('.multiple-choice');
+            var allRadioAnswered = true;
+            for (var i = 0; i < radioGroups.length; i++) {
+                if (!radioGroups[i].querySelector('input:checked')) {
+                    allRadioAnswered = false;
+                    break;
+                }
+            }
+
+            var fillInputs = document.querySelectorAll('.fill-line');
+            var allFillAnswered = true;
+            for (var i = 0; i < fillInputs.length; i++) {
+                if (fillInputs[i].value.trim() === '') {
+                    allFillAnswered = false;
+                    break;
+                }
+            }
+
+            return allRadioAnswered && allFillAnswered;
         }
 
+        // 提交试卷
         function handleSubmit() {
             if (!checkAllAnswered()) {
                 alert("你还有题目未作答，请继续答题！");
                 return;
             }
 
-            document.getElementById('timeDisplay').textContent = `用时：${calculateDuration()}`;
+            document.getElementById('timeDisplay').textContent = '用时：' + calculateDuration();
             
-            const btn = document.getElementById('submitBtn');
-            btn.onclick = () => location.reload();
+            var btn = document.getElementById('submitBtn');
+            btn.onclick = function() { location.reload(); };
             btn.textContent = '重新测试';
 
-            const allInputs = document.querySelectorAll('input');
-            allInputs.forEach(input => input.disabled = true);
+            var allInputs = document.querySelectorAll('input');
+            for (var i = 0; i < allInputs.length; i++) {
+                allInputs[i].disabled = true;
+            }
 
-            let totalScore = 0;
+            var totalScore = 0;
 
-            document.querySelectorAll('.multiple-choice').forEach(question => {
-                const correctAnswer = question.dataset.correct;
-                const selected = question.querySelector('input:checked');
+            // 批改选择题
+            var choiceQuestions = document.querySelectorAll('.multiple-choice');
+            for (var i = 0; i < choiceQuestions.length; i++) {
+                var question = choiceQuestions[i];
+                var correctAnswer = question.getAttribute('data-correct');
+                var selected = question.querySelector('input:checked');
 
-                if (selected?.value !== correctAnswer) {
-                    question.classList.add('wrong-answer');
+                if (selected && selected.value !== correctAnswer) {
+                    question.className += ' wrong-answer';
                 }
 
                 if (correctAnswer) {
-                    const correctOption = question.querySelector(`input[value="${correctAnswer}"]`);
+                    var correctOption = question.querySelector('input[value="' + correctAnswer + '"]');
                     
-                    if (selected?.value === correctAnswer) {
+                    if (selected && selected.value === correctAnswer) {
                         totalScore += 2;
-                        const mark = document.createElement('span');
+                        var mark = document.createElement('span');
                         mark.className = 'correct-mark';
                         mark.textContent = '✓';
                         selected.parentElement.appendChild(mark);
                     } else {
                         if (selected) {
-                            const mark = document.createElement('span');
+                            var mark = document.createElement('span');
                             mark.className = 'wrong-mark';
                             mark.textContent = '✗';
                             selected.parentElement.appendChild(mark);
                         }
-                        const correctMark = document.createElement('span');
+                        var correctMark = document.createElement('span');
                         correctMark.className = 'correct-mark';
-                        correctMark.textContent = `(${correctOption.parentElement.textContent.trim()})`;
+                        correctMark.textContent = '(' + correctOption.parentElement.textContent.trim() + ')';
                         question.appendChild(correctMark);
                     }
                 }
-            });
+            }
 
-            document.querySelectorAll('.fill-group').forEach((group) => {
-                const input = group.querySelector('input');
-                const groupContainer = group.closest('div[data-answers]');
-                if (!groupContainer) return;
-                const answers = JSON.parse(groupContainer.dataset.answers);
-                const groupsInContainer = Array.from(groupContainer.querySelectorAll('.fill-group'));
-                const groupIndex = groupsInContainer.indexOf(group);
+            // 批改填空题
+            var fillGroups = document.querySelectorAll('.fill-group');
+            for (var i = 0; i < fillGroups.length; i++) {
+                var group = fillGroups[i];
+                var input = group.querySelector('input');
+                var groupContainer = group.closest('div[data-answers]');
+                if (!groupContainer) continue;
+                
+                var answers = JSON.parse(groupContainer.getAttribute('data-answers'));
+                var groupIndex = Array.from(groupContainer.querySelectorAll('.fill-group')).indexOf(group);
                 
                 if (groupIndex !== -1 && groupIndex < answers.length) {
-                    const correctAnswer = answers[groupIndex];
+                    var correctAnswer = answers[groupIndex];
                     
                     if (input.value.trim() === correctAnswer) {
                         totalScore += 2;
-                        input.classList.add('correct');
+                        input.className += ' correct';
                     } else {
-                        input.classList.add('wrong');
-                        const hint = document.createElement('div');
+                        input.className += ' wrong';
+                        var hint = document.createElement('div');
                         hint.className = 'answer-hint';
                         hint.textContent = correctAnswer;
                         group.querySelector('.hint-container').appendChild(hint);
                     }
                 }
-            });
+            }
 
-            document.getElementById('scoreDisplay').textContent = `总分：${totalScore}分`;
+            document.getElementById('scoreDisplay').textContent = '总分：' + totalScore + '分';
             window.scrollTo(0, 0);
         }
 
+        // 工具函数：随机选题
         function getRandomQuestions(arr, count) {
-            return shuffle([...arr]).slice(0, count);
-        }
-
-        function getRandomIndices(max, count) {
-            return shuffle([...Array(max).keys()]).slice(0, count);
-        }
-
-        function getRandomKey(obj) {
-            const keys = Object.keys(obj);
-            return keys[Math.floor(Math.random() * keys.length)];
-        }
-
-        function shuffle(arr) {
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
+            var copy = arr.slice();
+            for (var i = copy.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = copy[i];
+                copy[i] = copy[j];
+                copy[j] = temp;
             }
-            return arr;
+            return copy.slice(0, count);
+        }
+
+        // 工具函数：生成随机索引
+        function getRandomIndices(max, count) {
+            var indices = [];
+            for (var i = 0; i < max; i++) indices.push(i);
+            for (var i = indices.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = indices[i];
+                indices[i] = indices[j];
+                indices[j] = temp;
+            }
+            return indices.slice(0, count);
+        }
+
+        // 工具函数：随机获取填空题key
+        function getRandomKey(obj) {
+            var keys = Object.keys(obj);
+            return keys[Math.floor(Math.random() * keys.length)];
         }
     </script>
 </body>
